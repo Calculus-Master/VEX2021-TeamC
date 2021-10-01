@@ -10,19 +10,30 @@
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
-// LeftMotor            motor         1               
-// RightMotor           motor         2               
+// LeftMotor            motor         10              
+// RightMotor           motor         1               
 // Controller1          controller                    
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
+#include "tankcontrols.h"
+#include "util.h"
 
 using namespace vex;
 
+controller::axis axisLeft() { return Controller1.Axis3; }
+controller::axis axisRight() { return Controller1.Axis2; }
+
 int main() 
 {
-  
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
-  
+
+  while(true)
+  {
+    axisLeft().changed([](){ powerLeft(axisLeft().position()); });
+    axisRight().changed([](){ powerRight(axisRight().position()); });
+
+    wait(100, msec);
+  }
 }
