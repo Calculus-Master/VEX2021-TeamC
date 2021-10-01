@@ -18,7 +18,6 @@
 #include "vex.h"
 #include "singleaxiscontrols.h"
 #include "tankcontrols.h"
-#include "util.h"
 
 using namespace vex;
 
