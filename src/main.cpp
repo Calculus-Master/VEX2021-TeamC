@@ -16,11 +16,13 @@
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
+#include "singleaxiscontrols.h"
 #include "tankcontrols.h"
 #include "util.h"
 
 using namespace vex;
 
+//Controls
 controller::axis axisLeft() { return Controller1.Axis3; }
 controller::axis axisRight() { return Controller1.Axis2; }
 
