@@ -10,9 +10,9 @@
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
-// LeftMotor            motor         1               
-// RightMotor           motor         2               
 // Controller1          controller                    
+// Drivetrain           drivetrain    1, 10           
+// forkLift             motor         2               
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
@@ -25,4 +25,9 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
   
+  forkLift.setVelocity(30, percent);
+  
+  forkLift.setStopping(brake);
 }
+
+
