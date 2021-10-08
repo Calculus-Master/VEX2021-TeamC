@@ -11,10 +11,12 @@ brain  Brain;
 motor LeftMotor = motor(PORT10, ratio18_1, false);
 motor RightMotor = motor(PORT1, ratio18_1, false);
 controller Controller1 = controller(primary);
-motor LeftDriveSmart = motor(PORT1, ratio6_1, false);
-motor RightDriveSmart = motor(PORT10, ratio6_1, true);
-drivetrain Drivetrain = drivetrain(LeftDriveSmart, RightDriveSmart, 319.19, 34, 40, mm, 1);
-motor forkLift = motor(PORT2, ratio36_1, false);
+/*vex-vision-config:begin*/
+signature Vision11__RED_SCREWDRIVER = signature (1, 5263, 7921, 6592, -655, 1, -327, 2.5, 0);
+vision Vision11 = vision (PORT11, 50, Vision11__RED_SCREWDRIVER);
+/*vex-vision-config:end*/
+motor forkLiftMotor = motor(PORT2, ratio36_1, false);
+inertial Gyro = inertial(PORT13);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable

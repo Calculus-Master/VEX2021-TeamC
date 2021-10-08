@@ -2,10 +2,22 @@ using namespace vex;
 
 extern brain Brain;
 
+using signature = vision::signature;
+
 // VEXcode devices
+extern motor LeftMotor;
+extern motor RightMotor;
 extern controller Controller1;
-extern drivetrain Drivetrain;
-extern motor forkLift;
+extern signature Vision11__RED_SCREWDRIVER;
+extern signature Vision11__SIG_2;
+extern signature Vision11__SIG_3;
+extern signature Vision11__SIG_4;
+extern signature Vision11__SIG_5;
+extern signature Vision11__SIG_6;
+extern signature Vision11__SIG_7;
+extern vision Vision11;
+extern motor forkLiftMotor;
+extern inertial Gyro;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.
