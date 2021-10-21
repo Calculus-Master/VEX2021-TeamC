@@ -4,9 +4,9 @@
 // LeftMotor            motor         10              
 // RightMotor           motor         1               
 // Controller1          controller                    
-// Vision11             vision        11              
+// Vision               vision        3               
 // forkLiftMotor        motor         2               
-// Gyro                 inertial      13              
+// Gyro                 inertial      6               
 // ---- END VEXCODE CONFIGURED DEVICES ----
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
@@ -21,6 +21,7 @@
 #include "vex.h"
 #include "singleaxiscontrols.h"
 #include "tankcontrols.h"
+#include "vision.h"
 
 using namespace vex;
 using namespace std;
@@ -28,6 +29,8 @@ using namespace std;
 //Controls
 controller::axis axisLeft() { return Controller1.Axis3; }
 controller::axis axisRight() { return Controller1.Axis2; }
+
+controller::button visioning() { return Controller1.ButtonB; }
 
 int main() 
 {
@@ -37,6 +40,7 @@ int main()
   {
     axisLeft().changed([](){ powerLeft(axisLeft().position()); });
     axisRight().changed([](){ powerRight(axisRight().position()); });
+    visioning().pressed([](){ visionAim(); });
     wait(100, msec);
   }
 }

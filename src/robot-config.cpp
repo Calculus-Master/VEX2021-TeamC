@@ -12,11 +12,11 @@ motor LeftMotor = motor(PORT10, ratio18_1, false);
 motor RightMotor = motor(PORT1, ratio18_1, false);
 controller Controller1 = controller(primary);
 /*vex-vision-config:begin*/
-signature Vision11__RED_SCREWDRIVER = signature (1, 5263, 7921, 6592, -655, 1, -327, 2.5, 0);
-vision Vision11 = vision (PORT11, 50, Vision11__RED_SCREWDRIVER);
+signature Vision__RED_SCREWDRIVER = signature (1, 5263, 7921, 6592, -655, 1, -327, 2.5, 0);
+vision Vision = vision (PORT3, 50, Vision__RED_SCREWDRIVER);
 /*vex-vision-config:end*/
 motor forkLiftMotor = motor(PORT2, ratio36_1, false);
-inertial Gyro = inertial(PORT13);
+inertial Gyro = inertial(PORT6);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable
