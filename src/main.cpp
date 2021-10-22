@@ -8,6 +8,16 @@
 // forkLiftMotor        motor         2               
 // Gyro                 inertial      6               
 // ---- END VEXCODE CONFIGURED DEVICES ----
+// ---- START VEXCODE CONFIGURED DEVICES ----
+// Robot Configuration:
+// [Name]               [Type]        [Port(s)]
+// LeftMotor            motor         10              
+// RightMotor           motor         1               
+// Controller1          controller                    
+// Vision               vision        3               
+// forkLiftMotor        motor         2               
+// Gyro                 inertial      6               
+// ---- END VEXCODE CONFIGURED DEVICES ----
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
@@ -22,6 +32,7 @@
 #include "singleaxiscontrols.h"
 #include "tankcontrols.h"
 #include "vision.h"
+#include <iostream>
 
 using namespace vex;
 using namespace std;
@@ -38,10 +49,13 @@ int main()
   vexcodeInit();
   while(true)
   {
-    axisLeft().changed([](){ powerLeft(axisLeft().position()); });
-    axisRight().changed([](){ powerRight(axisRight().position()); });
-    visioning().pressed([](){ visionAim(); });
-    wait(100, msec);
+    //axisLeft().changed([](){ powerLeft(axisLeft().position()); });
+    //axisRight().changed([](){ powerRight(axisRight().position()); });
+    //visioning().pressed([](){ visionAim(); });
+
+    visionAim();
+    wait(1000, msec);
+    Brain.Screen.clearScreen();
   }
 }
 

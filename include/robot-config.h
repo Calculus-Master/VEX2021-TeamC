@@ -9,7 +9,7 @@ extern motor LeftMotor;
 extern motor RightMotor;
 extern controller Controller1;
 extern signature Vision__RED_SCREWDRIVER;
-extern signature Vision__SIG_2;
+extern signature Vision__RING;
 extern signature Vision__SIG_3;
 extern signature Vision__SIG_4;
 extern signature Vision__SIG_5;
