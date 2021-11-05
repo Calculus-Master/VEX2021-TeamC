@@ -1,1 +1,2 @@
 void visionAim();
+void betterVision();
