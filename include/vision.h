@@ -1,2 +1,0 @@
-void visionAim();
-void betterVision();
