@@ -7,6 +7,7 @@ extern controller Controller1;
 extern motor LeftDriveMotor;
 extern motor RightDriveMotor;
 extern motor_group ArmMotors;
+extern motor IntakeMotor;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.
