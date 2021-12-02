@@ -8,7 +8,7 @@ using signature = vision::signature;
 extern motor LeftMotor;
 extern motor RightMotor;
 extern controller Controller1;
-extern signature Vision__RED_SCREWDRIVER;
+extern signature Vision__GOAL;
 extern signature Vision__RING;
 extern signature Vision__SIG_3;
 extern signature Vision__SIG_4;

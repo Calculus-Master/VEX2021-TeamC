@@ -18,7 +18,7 @@ void visionAim() {
   RightMotor.setVelocity(10, percent);
 
   while (linedup == false) {
-    Vision.takeSnapshot(Vision__RED_SCREWDRIVER);
+    Vision.takeSnapshot(Vision__GOAL);
     //Take photo looking for object
      int objectsSpotted = Vision.objectCount;
      Brain.Screen.setCursor(3, 3);
@@ -69,7 +69,7 @@ void betterVision()
 
   while(!aligned)
   {
-    Vision.takeSnapshot();
+    Vision.takeSnapshot(Vision__GOAL);
 
     Brain.Screen.setCursor(2, 3);
 
