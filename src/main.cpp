@@ -69,16 +69,19 @@ void autonomous()
   //Examples of how to do certain things (not a functional autonomous routine!)
 
   //Drive forward:
-  drive(vex::forward);
+  //drive(vex::forward);
 
   //Drive backward:
-  drive(vex::reverse);
+  //drive(vex::reverse);
 
   //Drive a certain time (milliseconds) - I didn't code drive a distance because that requires some more complicated math and physics:
-  drive(vex::forward, 1000);
+  //drive(vex::forward, 1000);
 
   //Turn a specific amount:
-  turn(60, vex::left);
+  //turn(60, vex::left);
+
+  //Temporary stuff
+  drive(vex::forward, 3000);
 }
 
 //Our custom initializations
