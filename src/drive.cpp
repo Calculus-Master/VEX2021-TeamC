@@ -35,3 +35,32 @@ void powerOff()
   LeftDriveMotor.stop();
   RightDriveMotor.stop();
 }
+
+//Autonomous
+
+void setVelocity(int velocity)
+{
+  LeftDriveMotor.setVelocity(velocity, percent);
+  RightDriveMotor.setVelocity(velocity, percent);
+}
+
+void drive(vex::directionType direction)
+{
+  LeftDriveMotor.spin(direction);
+  RightDriveMotor.spin(direction);
+}
+
+void drive(vex::directionType direction, int time)
+{
+  drive(direction);
+
+  wait(time, msec);
+
+  powerOff();
+}
+
+void turn(int deg, vex::turnType direction)
+{
+  LeftDriveMotor.spinFor(direction == vex::right ? vex::forward : vex::reverse, deg, degrees);
+  RightDriveMotor.spinFor(direction == vex::right ? vex::reverse : vex::forward, deg, degrees);
+}

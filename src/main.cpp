@@ -1,39 +1,3 @@
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// ---- END VEXCODE CONFIGURED DEVICES ----
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
@@ -55,6 +19,7 @@
 
 #include "vex.h"
 #include "drive.h"
+#include "intake.h"
 
 using namespace vex;
 
@@ -63,60 +28,17 @@ controller::axis rightDriveAxis() { return Controller1.Axis2; }
 
 controller::button toggleArmsButton() { return Controller1.ButtonA; }
 
-controller::button toggleIntakeButton() { return Controller1.ButtonX; }
-
 controller::button forwardIntakeButton() { return Controller1.ButtonR2; }
 controller::button reverseIntakeButton() { return Controller1.ButtonL2; }
 controller::button disableIntakeButton() { return Controller1.ButtonX; }
 
 bool armsDown;
-bool intakeOn;
 
 void toggleArms()
 {
   vex::directionType direction = armsDown ? vex::reverse : vex::forward;
   
   ArmMotors.spinFor(direction, 30, degrees);
-}
-
-void forwardIntake()
-{
-  IntakeMotor.spin(vex::forward);
-}
-
-void reverseIntake()
-{
-  IntakeMotor.spin(vex::reverse);
-}
-
-void stopIntake()
-{
-  IntakeMotor.stop();
-}
-
-void toggleIntake()
-{
-  int velocity = intakeOn ? 75 : 1;
-  bool finished = false;
-
-  vex::directionType direction = intakeOn ? vex::reverse : vex::forward;
-  int target = intakeOn ? 0 : 30;
-
-  IntakeMotor.setVelocity(velocity, percent);
-  IntakeMotor.spin(direction);
-
-  while(!finished)
-  {
-    if(intakeOn) velocity--;
-    else velocity++;
-
-    if(velocity == 0) IntakeMotor.stop();
-    else IntakeMotor.setVelocity(velocity, percent);
-
-    wait(50, msec);
-
-    if(velocity == target) finished = true;
-  }
 }
 
 void control()
@@ -129,19 +51,41 @@ void control()
   toggleArmsButton().pressed(toggleArms);
 
   //Toggle Intake
-  //toggleIntakeButton().pressed(toggleIntake);
-  forwardIntakeButton().pressed(forwardIntake);
-
-reverseIntakeButton().pressed(reverseIntake);
-disableIntakeButton().pressed(stopIntake);
+  forwardIntakeButton().pressed([](){ intake(vex::forward); });
+  reverseIntakeButton().pressed([](){ intake(vex::reverse); });
+  disableIntakeButton().pressed(disableIntake);
 
   //Pause
   wait(100, msec);
 }
 
+void manual()
+{
+  while(true) { control(); }
+}
+
 void autonomous()
 {
+  //Examples of how to do certain things (not a functional autonomous routine!)
 
+  //Drive forward:
+  drive(vex::forward);
+
+  //Drive backward:
+  drive(vex::reverse);
+
+  //Drive a certain time (milliseconds) - I didn't code drive a distance because that requires some more complicated math and physics:
+  drive(vex::forward, 1000);
+
+  //Turn a specific amount:
+  turn(60, vex::left);
+}
+
+//Our custom initializations
+void init()
+{
+  armsDown = true;
+  IntakeMotor.setVelocity(5, percent);
 }
 
 int main() 
@@ -149,10 +93,14 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  armsDown = true;
-  intakeOn = false;
+  //Any of our Init
+  init();
 
-  IntakeMotor.setVelocity(5, percent);
+  //Competition Code! (Required during Competition)
+  vex::competition c;
+  c.autonomous(autonomous);
+  c.drivercontrol(manual);
 
-  while(true) { control(); }
+  //If you need to do testing, make sure to start "Timed Run" in the Controller instead of "Run"
+  //Timed Run does 15 seconds of autonomous and then the rest in teleop
 }
