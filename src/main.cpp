@@ -96,7 +96,7 @@ void stopIntake()
 
 void toggleIntake()
 {
-  int velocity = 1;
+  int velocity = intakeOn ? 75 : 1;
   bool finished = false;
 
   vex::directionType direction = intakeOn ? vex::reverse : vex::forward;
@@ -112,7 +112,7 @@ void toggleIntake()
 
     if(velocity == 0) IntakeMotor.stop();
     else IntakeMotor.setVelocity(velocity, percent);
-    
+
     wait(50, msec);
 
     if(velocity == target) finished = true;
@@ -150,6 +150,7 @@ int main()
   vexcodeInit();
 
   armsDown = true;
+  intakeOn = false;
 
   IntakeMotor.setVelocity(5, percent);
 
