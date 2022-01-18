@@ -1,78 +1,8 @@
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   13, 12          
-// IntakeMotor          motor         4               
-// Vision               vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   11, 12          
-// IntakeMotor          motor         4               
-// Vision               vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   11, 12          
-// IntakeMotor          motor         4               
-// Vision               vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// Vision               vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// Vision               vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// Vision15             vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
-// ---- START VEXCODE CONFIGURED DEVICES ----
-// Robot Configuration:
-// [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   20, 3           
-// IntakeMotor          motor         4               
-// Vision15             vision        15              
-// ---- END VEXCODE CONFIGURED DEVICES ----
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
 /*    Author:       saptarshimallick                                          */
-/*    Created:      Thu Dec 02 2021                                           */
+/*    Created:      Thu Jan 06 2022                                           */
 /*    Description:  V5 project                                                */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -81,67 +11,39 @@
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
 // Controller1          controller                    
-// LeftDriveMotor       motor         1               
-// RightDriveMotor      motor         10              
-// ArmMotors            motor_group   2, 3            
-// IntakeMotor          motor         4               
+// LeftMotor            motor         2               
+// RightMotor           motor         1               
+// FrontArms            motor_group   3, 4            
+// BackArms             motor_group   5, 6            
+// BackVision           vision        20              
+// Inertial             inertial      10              
+// FrontVision          vision        19              
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
-#include "drive.h"
-#include "intake.h"
-#include "lift.h"
+#include <cmath>
 
 using namespace vex;
 
 controller::axis leftDriveAxis() { return Controller1.Axis3; }
 controller::axis rightDriveAxis() { return Controller1.Axis2; }
 
-controller::button ArmsButtonUp() { return Controller1.ButtonR1; }
-controller::button ArmsButtonDown() { return Controller1.ButtonL1; }
+controller::button frontArmsUp() { return Controller1.ButtonR1; }
+controller::button frontArmsDown() { return Controller1.ButtonL1; }
 
-controller::button forwardIntakeButton() { return Controller1.ButtonR2; }
-controller::button reverseIntakeButton() { return Controller1.ButtonL2; }
-controller::button disableIntakeButton() { return Controller1.ButtonX; }
+controller::button backArmsUp() { return Controller1.ButtonR2; }
+controller::button backArmsDown() { return Controller1.ButtonL2; }
 
-bool armsDown;
+controller::button alignBackVision() { return Controller1.ButtonDown; }
+controller::button alignFrontVision() { return Controller1.ButtonUp; }
 
-void ArmsUp()
+int deadzone = 5;
+int minimumDriveVelocity = 20;
+
+//Vision
+void alignIfCenter()
 {
-  ArmMotors.spinFor(forward, 60, degrees);
-}
-
-void ArmsDown()
-{
-  ArmMotors.spinFor(reverse, 60, degrees);
-}
-
-void control()
-{
-  //Drive
-  leftDriveAxis().changed([](){ powerLeft(rightDriveAxis().position()); });
-  rightDriveAxis().changed([](){ powerRight(leftDriveAxis().position()); });
-
-  //Toggle Arms
-  ArmsButtonUp().pressed(ArmsUp);
-  ArmsButtonDown().pressed(ArmsDown);
-
-  //Toggle Intake
-  forwardIntakeButton().pressed([](){ intake(vex::forward); });
-  reverseIntakeButton().pressed([](){ intake(vex::reverse); });
-  disableIntakeButton().pressed(disableIntake);
-
-  //Pause
-  wait(100, msec);
-}
-
-void manual()
-{
-  while(true) { control(); }
-}
-
-void preciseAlign()
-{
+  vex::vision v = BackVision;
   Brain.Screen.setCursor(2, 2);
   Brain.Screen.clearLine();
   Brain.Screen.setCursor(3, 2);
@@ -151,8 +53,8 @@ void preciseAlign()
   Brain.Screen.setCursor(5, 2);
   Brain.Screen.clearLine();
 
-  LeftDriveMotor.setVelocity(90, percent);
-  RightDriveMotor.setVelocity(90, percent);
+  LeftMotor.setVelocity(90, percent);
+  RightMotor.setVelocity(90, percent);
 
   bool aligned = false;
 
@@ -164,16 +66,16 @@ void preciseAlign()
   {
     wait(100, msec);
 
-    Vision.takeSnapshot(Vision__RED_ALLIANCE);
+    v.takeSnapshot(FrontVision__RED_GOAL);
 
-    if(Vision.objectCount == 0)
+    if(v.objectCount == 0)
     {
       Brain.Screen.setCursor(2, 2);
       Brain.Screen.print("No objects");
       return;
     }
 
-    int goal = Vision.objects[0].centerX;
+    int goal = v.objects[0].centerX;
 
     double offset = fovCenter - goal;
     double goalDistance = 59.0;
@@ -196,59 +98,219 @@ void preciseAlign()
 
       if(offset < 0)
       {
-        LeftDriveMotor.spinFor(forward, turnAngle, degrees);
-        RightDriveMotor.spinFor(reverse, turnAngle, degrees);
+        LeftMotor.spinFor(forward, turnAngle, degrees);
+        RightMotor.spinFor(reverse, turnAngle, degrees);
       }
       else
       {
-        LeftDriveMotor.spinFor(reverse, turnAngle, degrees);
-        RightDriveMotor.spinFor(forward, turnAngle, degrees);
+        LeftMotor.spinFor(reverse, turnAngle, degrees);
+        RightMotor.spinFor(forward, turnAngle, degrees);
       }
     }
   }
-
- 
 }
 
-void liftIntake() {
-  
-}
-
-void autonomous()
+void alignIfRight()
 {
-  //Examples of how to do certain things (not a functional autonomous routine!)
+  vex::vision v = FrontVision;
+  Brain.Screen.setCursor(2, 2);
+  Brain.Screen.clearLine();
+  Brain.Screen.setCursor(3, 2);
+  Brain.Screen.clearLine();
+  Brain.Screen.setCursor(4, 2);
+  Brain.Screen.clearLine();
+  Brain.Screen.setCursor(5, 2);
+  Brain.Screen.clearLine();
 
-  //Drive forward:
-  //drive(vex::forward);
+  LeftMotor.setVelocity(90, percent);
+  RightMotor.setVelocity(90, percent);
 
-  //Drive backward:
-  //drive(vex::reverse);
+  bool aligned = false;
 
-  //Drive a certain time (milliseconds) - I didn't code drive a distance because that requires some more complicated math and physics:
-  //drive(vex::forward, 1000);
+  int fovX = 316;
+  int fovCenter = fovX / 2;
+  int ME = 3;
 
-  //Turn a specific amount:
-  //turn(60, vex::left);
+  fovCenter += 100;
 
-  //Temporary stuff
-  //Auton set to 
+  while(!aligned)
+  {
+    wait(100, msec);
 
-  //Precise align requires change in color signature each time
-  turn(45, vex::right);
-  preciseAlign();
-  drive(vex::forward, 2000);
- ArmsUp();
- ArmsUp();
+    v.takeSnapshot(FrontVision__RED_GOAL);
 
+    if(v.objectCount == 0)
+    {
+      Brain.Screen.setCursor(2, 2);
+      Brain.Screen.print("No objects");
+      return;
+    }
 
+    int goalCenter = v.objects[0].centerX;
+
+    double offset = fovCenter - goalCenter;
+    double goalDistance = 59.0;
+
+    if(abs((int)offset) <= ME) aligned = true;
+    else
+    {
+      double turnAngle = atan(offset / goalDistance);
+      if(turnAngle < 0) turnAngle *= -1;
+
+      turnAngle *= 180;
+      turnAngle /= 3.1415926;
+
+      Brain.Screen.setCursor(3, 2);
+      Brain.Screen.print(offset);
+      Brain.Screen.setCursor(4, 2);
+      Brain.Screen.print(goalDistance);
+      Brain.Screen.setCursor(5, 2);
+      Brain.Screen.print(turnAngle);
+
+      if(offset < 0)
+      {
+        LeftMotor.spinFor(forward, turnAngle, degrees);
+        RightMotor.spinFor(reverse, turnAngle, degrees);
+      }
+      else
+      {
+        LeftMotor.spinFor(reverse, turnAngle, degrees);
+        RightMotor.spinFor(forward, turnAngle, degrees);
+      }
+    }
+  }
 }
 
-//Our custom initializations
-void init()
+//Back Arms
+void moveBackArms(vex::directionType direction)
 {
-  armsDown = false;
-  IntakeMotor.setVelocity(5, percent);
-  ArmMotors.setVelocity(50, percent);
+  BackArms.spin(direction);
+}
+
+void stopBackArms()
+{
+  BackArms.stop();
+}
+
+//Front Arms
+void moveFrontArms(vex::directionType direction)
+{
+  FrontArms.spin(direction);
+}
+
+void stopFrontArms()
+{
+  FrontArms.stop();
+}
+
+//Driving
+int velocityAt(int position)
+{
+  int absPos = std::abs(position);
+
+  return absPos < minimumDriveVelocity ? minimumDriveVelocity : absPos;
+}
+
+void powerLeft(int position)
+{
+  if(position >= -1 * deadzone && position <= deadzone) LeftMotor.stop();
+  else
+  {
+    vex::directionType direction = position < 0 ? vex::reverse : vex::forward;
+
+    LeftMotor.setVelocity(velocityAt(position), percent);
+    LeftMotor.spin(direction);
+  }
+}
+
+void powerRight(int position)
+{
+  if(position >= -1 * deadzone && position <= deadzone) RightMotor.stop();
+  else
+  {
+    vex::directionType direction = position < 0 ? vex::reverse : vex::forward;
+
+    RightMotor.setVelocity(std::abs(position), percent);
+    RightMotor.spin(direction);
+  }
+}
+
+bool checkMotorTemps()
+{
+  int tempLimit = 60;
+  vex::temperatureUnits c = vex::temperatureUnits::celsius;
+
+  bool exit = false;
+
+  //Check Drive Motors (These shouldn't overheat)
+  if(LeftMotor.temperature(c) > tempLimit || LeftMotor.temperature(c) > tempLimit)
+  {
+    Brain.Screen.setCursor(2, 2);
+    Brain.Screen.clearLine();
+    Brain.Screen.print("Drive Motor Overheated!");
+
+    Brain.Screen.setCursor(3, 3);
+    Brain.Screen.print(LeftMotor.temperature(c));
+    Brain.Screen.setCursor(3, 4);
+    Brain.Screen.print(RightMotor.temperature(c));
+
+    exit = true;
+  }
+
+  //Check Back Arm Motors (These shouldn't really overheat)
+  if(BackArms.temperature(c) > tempLimit)
+  {
+    Brain.Screen.setCursor(3, 2);
+    Brain.Screen.clearLine();
+    Brain.Screen.print("Back Arm Motors (Longer Arms) Overheated!");
+
+    Brain.Screen.setCursor(3, 3);
+    Brain.Screen.print(BackArms.temperature(c));
+
+    exit = true;
+  }
+
+  //Check Front Arm Motors (These will most likely overheat)
+  if(FrontArms.temperature(c) > tempLimit)
+  {
+    Brain.Screen.setCursor(4, 2);
+    Brain.Screen.clearLine();
+    Brain.Screen.print("Front Arm Motors (Shorter Arms) Overheated!");
+
+    Brain.Screen.setCursor(4, 3);
+    Brain.Screen.print(FrontArms.temperature(c));
+
+    exit = true;
+  }
+
+  return exit;
+}
+
+void driver()
+{
+  leftDriveAxis().changed([](){ powerLeft(leftDriveAxis().position()); });
+  rightDriveAxis().changed([](){ powerRight(rightDriveAxis().position()); });
+
+  frontArmsUp().pressed([](){ moveFrontArms(vex::forward); });
+  frontArmsDown().pressed([](){ moveFrontArms(vex::reverse); });
+
+  if(frontArmsUp().pressing()) moveFrontArms(vex::forward);
+  else if(frontArmsDown().pressing()) moveFrontArms(vex::reverse);
+  else stopFrontArms();
+
+  if(backArmsUp().pressing()) moveBackArms(vex::forward);
+  else if(backArmsDown().pressing()) moveBackArms(vex::reverse);
+  else stopBackArms();
+
+  alignFrontVision().pressed([](){ alignIfRight(); });
+  alignBackVision().pressed([](){ alignIfCenter(); });
+
+  wait(100, msec);
+}
+
+void auton()
+{
+
 }
 
 int main() 
@@ -256,16 +318,19 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  //Any of our Init
-  init();
+  FrontArms.setVelocity(70, percent);
+  BackArms.setVelocity(80, percent);
 
-  //Competition Code! (Required during Competition)
-  vex::competition c;
-  c.autonomous(autonomous);
-  c.drivercontrol(manual);
+  FrontArms.setMaxTorque(100, percent);
+  BackArms.setMaxTorque(50, percent);
 
-  //If you need to do testing, make sure to start "Timed Run" in the Controller instead of "Run"
-  //Timed Run does 15 seconds of autonomous and then the rest in teleop
+  FrontArms.setStopping(hold);
+  BackArms.setStopping(hold);
+
+  while(true) 
+  {
+    driver(); 
+
+    if(checkMotorTemps()) break;
+  }
 }
-
-//lmao im putting vision in the main

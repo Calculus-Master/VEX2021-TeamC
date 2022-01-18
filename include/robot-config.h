@@ -6,18 +6,27 @@ using signature = vision::signature;
 
 // VEXcode devices
 extern controller Controller1;
-extern motor LeftDriveMotor;
-extern motor RightDriveMotor;
-extern motor_group ArmMotors;
-extern motor IntakeMotor;
-extern signature Vision__RED_ALLIANCE;
-extern signature Vision__BLUE_ALLIANCE;
-extern signature Vision__MOBILE_GOAL;
-extern signature Vision__SIG_4;
-extern signature Vision__SIG_5;
-extern signature Vision__SIG_6;
-extern signature Vision__SIG_7;
-extern vision Vision;
+extern motor LeftMotor;
+extern motor RightMotor;
+extern motor_group FrontArms;
+extern motor_group BackArms;
+extern signature BackVision__SIG_1;
+extern signature BackVision__SIG_2;
+extern signature BackVision__SIG_3;
+extern signature BackVision__SIG_4;
+extern signature BackVision__SIG_5;
+extern signature BackVision__SIG_6;
+extern signature BackVision__SIG_7;
+extern vision BackVision;
+extern inertial Inertial;
+extern signature FrontVision__RED_GOAL;
+extern signature FrontVision__SIG_2;
+extern signature FrontVision__SIG_3;
+extern signature FrontVision__SIG_4;
+extern signature FrontVision__SIG_5;
+extern signature FrontVision__SIG_6;
+extern signature FrontVision__SIG_7;
+extern vision FrontVision;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.
