@@ -318,6 +318,14 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("Calibrating Intertial Sensor");
+
+  Inertial.calibrate();
+  wait(2, seconds);
+  
+  Brain.Screen.clearScreen();
+
   FrontArms.setVelocity(70, percent);
   BackArms.setVelocity(80, percent);
 
