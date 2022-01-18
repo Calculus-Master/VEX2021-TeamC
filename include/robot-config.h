@@ -10,7 +10,7 @@ extern motor LeftMotor;
 extern motor RightMotor;
 extern motor_group FrontArms;
 extern motor_group BackArms;
-extern signature BackVision__SIG_1;
+extern signature BackVision__RED_GOAL;
 extern signature BackVision__SIG_2;
 extern signature BackVision__SIG_3;
 extern signature BackVision__SIG_4;

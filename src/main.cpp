@@ -40,10 +40,25 @@ controller::button alignFrontVision() { return Controller1.ButtonUp; }
 int deadzone = 5;
 int minimumDriveVelocity = 20;
 
-//Vision
-void alignIfCenter()
+int visionFOV_X = 316;
+int visionMarginOfError = 4;
+
+//Vision Utilities
+
+void alignTurnLeft(double angle)
 {
-  vex::vision v = BackVision;
+  LeftMotor.spinFor(vex::reverse, angle, degrees);
+  RightMotor.spinFor(vex::forward, angle, degrees);
+}
+
+void alignTurnRight(double angle)
+{
+  LeftMotor.spinFor(vex::forward, angle, degrees);
+  RightMotor.spinFor(vex::reverse, angle, degrees);
+}
+
+void clearVisionPrintLines()
+{
   Brain.Screen.setCursor(2, 2);
   Brain.Screen.clearLine();
   Brain.Screen.setCursor(3, 2);
@@ -52,35 +67,54 @@ void alignIfCenter()
   Brain.Screen.clearLine();
   Brain.Screen.setCursor(5, 2);
   Brain.Screen.clearLine();
+}
 
+void setAlignmentDriveVelocity()
+{
   LeftMotor.setVelocity(90, percent);
   RightMotor.setVelocity(90, percent);
+}
+
+void printVisionValues(double offset, double goalDistance, double turnAngle)
+{
+  Brain.Screen.setCursor(3, 2);
+  Brain.Screen.print(offset);
+  Brain.Screen.setCursor(4, 2);
+  Brain.Screen.print(goalDistance);
+  Brain.Screen.setCursor(5, 2);
+  Brain.Screen.print(turnAngle);
+}
+
+//Sensor Position: Center
+void alignBack()
+{
+  clearVisionPrintLines();
+  setAlignmentDriveVelocity();
 
   bool aligned = false;
 
-  int fovX = 316;
-  int fovCenter = fovX / 2;
-  int ME = 3;
+  //Target: Center of the FOV
+  int target = visionFOV_X / 2;
 
   while(!aligned)
   {
     wait(100, msec);
 
-    v.takeSnapshot(FrontVision__RED_GOAL);
+    BackVision.takeSnapshot(BackVision__RED_GOAL);
 
-    if(v.objectCount == 0)
+    if(BackVision.objectCount == 0)
     {
       Brain.Screen.setCursor(2, 2);
       Brain.Screen.print("No objects");
       return;
     }
 
-    int goal = v.objects[0].centerX;
+    int goal = BackVision.objects[0].centerX;
 
-    double offset = fovCenter - goal;
+    double offset = target - goal;
     double goalDistance = 59.0;
 
-    if(abs((int)offset) <= ME) aligned = true;
+    if(abs((int)offset) <= visionMarginOfError) aligned = true;
     else
     {
       double turnAngle = atan(offset / goalDistance);
@@ -89,69 +123,44 @@ void alignIfCenter()
       turnAngle *= 180;
       turnAngle /= 3.1415926;
 
-      Brain.Screen.setCursor(3, 2);
-      Brain.Screen.print(offset);
-      Brain.Screen.setCursor(4, 2);
-      Brain.Screen.print(goalDistance);
-      Brain.Screen.setCursor(5, 2);
-      Brain.Screen.print(turnAngle);
+      printVisionValues(offset, goalDistance, turnAngle);
 
-      if(offset < 0)
-      {
-        LeftMotor.spinFor(forward, turnAngle, degrees);
-        RightMotor.spinFor(reverse, turnAngle, degrees);
-      }
-      else
-      {
-        LeftMotor.spinFor(reverse, turnAngle, degrees);
-        RightMotor.spinFor(forward, turnAngle, degrees);
-      }
+      if(offset < 0) alignTurnRight(turnAngle);
+      else alignTurnLeft(turnAngle);
     }
   }
 }
 
-void alignIfRight()
+//Sensor Position: Right
+void alignFront()
 {
-  vex::vision v = FrontVision;
-  Brain.Screen.setCursor(2, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(3, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(4, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(5, 2);
-  Brain.Screen.clearLine();
-
-  LeftMotor.setVelocity(90, percent);
-  RightMotor.setVelocity(90, percent);
+  clearVisionPrintLines();
+  setAlignmentDriveVelocity();
 
   bool aligned = false;
 
-  int fovX = 316;
-  int fovCenter = fovX / 2;
-  int ME = 3;
-
-  fovCenter += 100;
+  //Target: Slightly Right of the Center of the FOV
+  int target = visionFOV_X / 2 + 15;
 
   while(!aligned)
   {
     wait(100, msec);
 
-    v.takeSnapshot(FrontVision__RED_GOAL);
+    FrontVision.takeSnapshot(FrontVision__RED_GOAL);
 
-    if(v.objectCount == 0)
+    if(FrontVision.objectCount == 0)
     {
       Brain.Screen.setCursor(2, 2);
       Brain.Screen.print("No objects");
       return;
     }
 
-    int goalCenter = v.objects[0].centerX;
+    int goalCenter = FrontVision.objects[0].centerX;
 
-    double offset = fovCenter - goalCenter;
+    double offset = target - goalCenter;
     double goalDistance = 59.0;
 
-    if(abs((int)offset) <= ME) aligned = true;
+    if(abs((int)offset) <= visionMarginOfError) aligned = true;
     else
     {
       double turnAngle = atan(offset / goalDistance);
@@ -160,23 +169,10 @@ void alignIfRight()
       turnAngle *= 180;
       turnAngle /= 3.1415926;
 
-      Brain.Screen.setCursor(3, 2);
-      Brain.Screen.print(offset);
-      Brain.Screen.setCursor(4, 2);
-      Brain.Screen.print(goalDistance);
-      Brain.Screen.setCursor(5, 2);
-      Brain.Screen.print(turnAngle);
+      printVisionValues(offset, goalDistance, turnAngle);
 
-      if(offset < 0)
-      {
-        LeftMotor.spinFor(forward, turnAngle, degrees);
-        RightMotor.spinFor(reverse, turnAngle, degrees);
-      }
-      else
-      {
-        LeftMotor.spinFor(reverse, turnAngle, degrees);
-        RightMotor.spinFor(forward, turnAngle, degrees);
-      }
+      if(offset < 0) alignTurnLeft(turnAngle);
+      else alignTurnRight(turnAngle);
     }
   }
 }
@@ -302,8 +298,8 @@ void driver()
   else if(backArmsDown().pressing()) moveBackArms(vex::reverse);
   else stopBackArms();
 
-  alignFrontVision().pressed([](){ alignIfRight(); });
-  alignBackVision().pressed([](){ alignIfCenter(); });
+  alignFrontVision().pressed([](){ alignFront(); });
+  alignBackVision().pressed([](){ alignBack(); });
 
   wait(100, msec);
 }

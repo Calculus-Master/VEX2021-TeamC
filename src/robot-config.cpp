@@ -18,8 +18,8 @@ motor BackArmsMotorA = motor(PORT5, ratio18_1, false);
 motor BackArmsMotorB = motor(PORT6, ratio18_1, true);
 motor_group BackArms = motor_group(BackArmsMotorA, BackArmsMotorB);
 /*vex-vision-config:begin*/
-signature BackVision__SIG_1 = signature (1, 7085, 8705, 7895, -999, -465, -732, 3, 0);
-vision BackVision = vision (PORT20, 50, BackVision__SIG_1);
+signature BackVision__RED_GOAL = signature (1, 7085, 8705, 7895, -999, -465, -732, 3, 0);
+vision BackVision = vision (PORT20, 50, BackVision__RED_GOAL);
 /*vex-vision-config:end*/
 inertial Inertial = inertial(PORT10);
 /*vex-vision-config:begin*/
