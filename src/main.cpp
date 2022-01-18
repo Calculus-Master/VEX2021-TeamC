@@ -18,6 +18,7 @@
 // BackVision           vision        20              
 // Inertial             inertial      10              
 // FrontVision          vision        19              
+// Optical              distance      16              
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
@@ -40,6 +41,7 @@ controller::button alignFrontVision() { return Controller1.ButtonUp; }
 int deadzone = 5;
 int minimumDriveVelocity = 20;
 
+int visionDriveVelocity = 90;
 int visionFOV_X = 316;
 int visionMarginOfError = 4;
 
@@ -71,8 +73,8 @@ void clearVisionPrintLines()
 
 void setAlignmentDriveVelocity()
 {
-  LeftMotor.setVelocity(90, percent);
-  RightMotor.setVelocity(90, percent);
+  LeftMotor.setVelocity(visionDriveVelocity, percent);
+  RightMotor.setVelocity(visionDriveVelocity, percent);
 }
 
 void printVisionValues(double offset, double goalDistance, double turnAngle)
@@ -85,6 +87,40 @@ void printVisionValues(double offset, double goalDistance, double turnAngle)
   Brain.Screen.print(turnAngle);
 }
 
+void visionDriveTo(vex::directionType dir)
+{
+  bool reached = false;
+  int tries = 0;
+
+  while(!reached)
+  {
+    Brain.Screen.setCursor(1, 4);
+
+    if(Optical.isObjectDetected())
+    {
+      LeftMotor.spinFor(dir, 180, degrees);
+      RightMotor.spinFor(dir, 180, degrees);
+
+      Brain.Screen.print("Found Object, Driving");
+      Brain.Screen.print(tries);
+
+      wait(100, msec);
+    }
+    else
+    {
+      reached = true;
+
+      Brain.Screen.print("Reached Object, Stopping");
+      Brain.Screen.print(tries);
+
+      LeftMotor.stop();
+      RightMotor.stop();
+    } 
+
+    tries++;
+  }
+}
+
 //Sensor Position: Center
 void alignBack()
 {
@@ -94,7 +130,7 @@ void alignBack()
   bool aligned = false;
 
   //Target: Center of the FOV
-  int target = visionFOV_X / 2;
+  int targetX = visionFOV_X / 2;
 
   while(!aligned)
   {
@@ -111,7 +147,7 @@ void alignBack()
 
     int goal = BackVision.objects[0].centerX;
 
-    double offset = target - goal;
+    double offset = targetX - goal;
     double goalDistance = 59.0;
 
     if(abs((int)offset) <= visionMarginOfError) aligned = true;
@@ -129,6 +165,8 @@ void alignBack()
       else alignTurnLeft(turnAngle);
     }
   }
+
+  visionDriveTo(vex::reverse);
 }
 
 //Sensor Position: Right
@@ -140,7 +178,7 @@ void alignFront()
   bool aligned = false;
 
   //Target: Slightly Right of the Center of the FOV
-  int target = visionFOV_X / 2 + 15;
+  int targetX = visionFOV_X / 2 + 15;
 
   while(!aligned)
   {
@@ -157,7 +195,7 @@ void alignFront()
 
     int goalCenter = FrontVision.objects[0].centerX;
 
-    double offset = target - goalCenter;
+    double offset = targetX - goalCenter;
     double goalDistance = 59.0;
 
     if(abs((int)offset) <= visionMarginOfError) aligned = true;
@@ -175,6 +213,8 @@ void alignFront()
       else alignTurnRight(turnAngle);
     }
   }
+
+  visionDriveTo(vex::forward);
 }
 
 //Back Arms

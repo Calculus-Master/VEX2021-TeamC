@@ -26,6 +26,7 @@ inertial Inertial = inertial(PORT10);
 signature FrontVision__RED_GOAL = signature (1, 6319, 8193, 7256, -917, 355, -282, 3, 0);
 vision FrontVision = vision (PORT19, 50, FrontVision__RED_GOAL);
 /*vex-vision-config:end*/
+distance Optical = distance(PORT16);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable

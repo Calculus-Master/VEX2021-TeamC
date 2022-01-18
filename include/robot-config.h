@@ -27,6 +27,7 @@ extern signature FrontVision__SIG_5;
 extern signature FrontVision__SIG_6;
 extern signature FrontVision__SIG_7;
 extern vision FrontVision;
+extern distance Optical;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.
