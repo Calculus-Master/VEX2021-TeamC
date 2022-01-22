@@ -38,6 +38,8 @@ controller::button backArmsDown() { return Controller1.ButtonL2; }
 controller::button alignBackVision() { return Controller1.ButtonDown; }
 controller::button alignFrontVision() { return Controller1.ButtonUp; }
 
+controller::button panicButton() { return Controller1.ButtonX; }
+
 int deadzone = 5;
 int minimumDriveVelocity = 20;
 
@@ -85,6 +87,32 @@ void printVisionValues(double offset, double goalDistance, double turnAngle)
   Brain.Screen.print(goalDistance);
   Brain.Screen.setCursor(5, 2);
   Brain.Screen.print(turnAngle);
+}
+
+void visionDriveToNew()
+{
+  int currentDistance = Optical.objectDistance(mm);
+
+  LeftMotor.spin(forward);
+  RightMotor.spin(forward);
+
+  int headstart = 0;
+  while(headstart < 25) { wait(100, msec); headstart++; }
+
+  currentDistance = Optical.objectDistance(mm);
+
+  while(currentDistance > 97)
+  {
+    Brain.Screen.setCursor(4, 4);
+    Brain.Screen.print("Driving");
+
+    currentDistance = Optical.objectDistance(mm);
+
+    wait(10, msec);
+  }
+
+  LeftMotor.stop();
+  RightMotor.stop();
 }
 
 void visionDriveTo(vex::directionType dir)
@@ -178,7 +206,7 @@ void alignFront()
   bool aligned = false;
 
   //Target: Slightly Right of the Center of the FOV
-  int targetX = visionFOV_X / 2 + 15;
+  int targetX = visionFOV_X / 2 - 30;
 
   while(!aligned)
   {
@@ -190,6 +218,8 @@ void alignFront()
     {
       Brain.Screen.setCursor(2, 2);
       Brain.Screen.print("No objects");
+      Brain.Screen.setCursor(3, 7);
+      Brain.Screen.print("Front");
       return;
     }
 
@@ -209,12 +239,13 @@ void alignFront()
 
       printVisionValues(offset, goalDistance, turnAngle);
 
-      if(offset < 0) alignTurnLeft(turnAngle);
-      else alignTurnRight(turnAngle);
+      if(offset < 0) alignTurnRight(turnAngle);
+      else alignTurnLeft(turnAngle);
     }
   }
 
-  visionDriveTo(vex::forward);
+  //visionDriveTo(vex::forward);
+  visionDriveToNew();
 }
 
 //Back Arms
@@ -349,6 +380,12 @@ void auton()
 
 }
 
+void panic()
+{
+  LeftMotor.stop();
+  RightMotor.stop();
+}
+
 int main() 
 {
   // Initializing Robot Configuration. DO NOT REMOVE!
@@ -371,9 +408,15 @@ int main()
   FrontArms.setStopping(hold);
   BackArms.setStopping(hold);
 
+  panicButton().pressed(panic);
+
   while(true) 
   {
     driver(); 
+
+    //alignFront();
+
+    wait(100, msec);
 
     if(checkMotorTemps()) break;
   }

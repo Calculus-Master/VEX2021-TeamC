@@ -23,7 +23,7 @@ vision BackVision = vision (PORT20, 50, BackVision__RED_GOAL);
 /*vex-vision-config:end*/
 inertial Inertial = inertial(PORT10);
 /*vex-vision-config:begin*/
-signature FrontVision__RED_GOAL = signature (1, 6319, 8193, 7256, -917, 355, -282, 3, 0);
+signature FrontVision__RED_GOAL = signature (1, 7451, 9457, 8454, -1065, -353, -710, 3, 0);
 vision FrontVision = vision (PORT19, 50, FrontVision__RED_GOAL);
 /*vex-vision-config:end*/
 distance Optical = distance(PORT16);
