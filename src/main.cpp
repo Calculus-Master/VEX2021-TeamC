@@ -14,17 +14,28 @@
 // LeftMotor            motor         2               
 // RightMotor           motor         1               
 // FrontArms            motor_group   3, 4            
-// BackArms             motor_group   5, 6            
 // BackVision           vision        20              
 // Inertial             inertial      10              
 // FrontVision          vision        19              
 // Optical              distance      16              
+// CascadeArm           motor         6               
+// TiltArm              motor         5               
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
+#include "robot-config.h"
+
 #include <cmath>
 
+#include "Drive.h"
+#include "ElevatorArmMotor.h"
+#include "CarryArmDualMotors.h"
+#include "CustomVisionSensor.h"
+
 using namespace vex;
+using namespace std;
+
+vex::competition Competition;
 
 controller::axis leftDriveAxis() { return Controller1.Axis3; }
 controller::axis rightDriveAxis() { return Controller1.Axis2; }
@@ -35,355 +46,181 @@ controller::button frontArmsDown() { return Controller1.ButtonL1; }
 controller::button backArmsUp() { return Controller1.ButtonR2; }
 controller::button backArmsDown() { return Controller1.ButtonL2; }
 
-controller::button alignBackVision() { return Controller1.ButtonDown; }
-controller::button alignFrontVision() { return Controller1.ButtonUp; }
+controller::button tiltArmsDown() { return Controller1.ButtonDown; }
+controller::button tiltArmsUp() { return Controller1.ButtonUp; }
+
+controller::button alignVision() { return Controller1.ButtonY; }
 
 controller::button panicButton() { return Controller1.ButtonX; }
 
-int deadzone = 5;
-int minimumDriveVelocity = 20;
+controller::button autonButton() { return Controller1.ButtonB; }
 
-int visionDriveVelocity = 90;
-int visionFOV_X = 316;
-int visionMarginOfError = 4;
-
-//Vision Utilities
-
-void alignTurnLeft(double angle)
+void turn(vex::turnType turn, int deg)
 {
-  LeftMotor.spinFor(vex::reverse, angle, degrees);
-  RightMotor.spinFor(vex::forward, angle, degrees);
-}
+  LeftMotor.setVelocity(100, percent);
+  RightMotor.setVelocity(100, percent);
 
-void alignTurnRight(double angle)
-{
-  LeftMotor.spinFor(vex::forward, angle, degrees);
-  RightMotor.spinFor(vex::reverse, angle, degrees);
-}
-
-void clearVisionPrintLines()
-{
-  Brain.Screen.setCursor(2, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(3, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(4, 2);
-  Brain.Screen.clearLine();
-  Brain.Screen.setCursor(5, 2);
-  Brain.Screen.clearLine();
-}
-
-void setAlignmentDriveVelocity()
-{
-  LeftMotor.setVelocity(visionDriveVelocity, percent);
-  RightMotor.setVelocity(visionDriveVelocity, percent);
-}
-
-void printVisionValues(double offset, double goalDistance, double turnAngle)
-{
-  Brain.Screen.setCursor(3, 2);
-  Brain.Screen.print(offset);
-  Brain.Screen.setCursor(4, 2);
-  Brain.Screen.print(goalDistance);
-  Brain.Screen.setCursor(5, 2);
-  Brain.Screen.print(turnAngle);
-}
-
-void visionDriveToNew()
-{
-  int currentDistance = Optical.objectDistance(mm);
-
-  LeftMotor.spin(forward);
-  RightMotor.spin(forward);
-
-  int headstart = 0;
-  while(headstart < 25) { wait(100, msec); headstart++; }
-
-  currentDistance = Optical.objectDistance(mm);
-
-  while(currentDistance > 97)
-  {
-    Brain.Screen.setCursor(4, 4);
-    Brain.Screen.print("Driving");
-
-    currentDistance = Optical.objectDistance(mm);
-
-    wait(10, msec);
+  if (turn == right) {
+    LeftMotor.spinFor(vex::forward, deg, degrees);
+    RightMotor.spinFor(vex::reverse, deg, degrees);
   }
+  else {
+    RightMotor.spinFor(vex::forward, deg, degrees);
+    LeftMotor.spinFor(vex::reverse, deg, degrees);
+  }
+}
+
+void powerFor(bool left, int velocity, int time)
+{
+  if(left) powerLeft(velocity);
+  else powerRight(velocity);
+
+  wait(time, msec);
+
+  if(left) LeftMotor.stop();
+  else RightMotor.stop();
+}
+
+enum StartPos
+{
+  BLUE_LEFT,
+  BLUE_RIGHT,
+  RED_LEFT,
+  RED_RIGHT,
+  SKILLS
+};
+
+void autoDrive(int time, int velocity)
+{
+  powerLeft(velocity);
+  powerRight(velocity);
+
+  wait(time, msec);
 
   LeftMotor.stop();
   RightMotor.stop();
 }
 
-void visionDriveTo(vex::directionType dir)
+void skills()
 {
-  bool reached = false;
-  int tries = 0;
+  //Drop Carry Arms
+  //FrontArms.spinFor(vex::forward, 200, degrees);
 
-  while(!reached)
-  {
-    Brain.Screen.setCursor(1, 4);
+  //Drop Elevator Arm
+  TiltArm.spinFor(vex::reverse, 100, degrees);
 
-    if(Optical.isObjectDetected())
-    {
-      LeftMotor.spinFor(dir, 180, degrees);
-      RightMotor.spinFor(dir, 180, degrees);
+  //Push Yellow 1
+  autoDrive(6000, 100);
 
-      Brain.Screen.print("Found Object, Driving");
-      Brain.Screen.print(tries);
+  //Turn Yellow 2
+  powerFor(false, -100, 1050);
 
-      wait(100, msec);
-    }
-    else
-    {
-      reached = true;
+  //Push Yellow 2
+  autoDrive(5500, -100);
 
-      Brain.Screen.print("Reached Object, Stopping");
-      Brain.Screen.print(tries);
+  //Drive out a little
+  autoDrive(700, 100);
 
-      LeftMotor.stop();
-      RightMotor.stop();
-    } 
+  //Turn Yellow 3
+  powerFor(true, -100, 1600);
+  powerFor(false, 100, 200);
 
-    tries++;
-  }
+  //Push Yellow 3
+  autoDrive(5000, 100);
 }
 
-//Sensor Position: Center
-void alignBack()
+void auton(StartPos pos)
 {
-  clearVisionPrintLines();
-  setAlignmentDriveVelocity();
-
-  bool aligned = false;
-
-  //Target: Center of the FOV
-  int targetX = visionFOV_X / 2;
-
-  while(!aligned)
+  //Ditch old stuff because Hardcoding is the best
+  if(pos == SKILLS) 
   {
-    wait(100, msec);
-
-    BackVision.takeSnapshot(BackVision__RED_GOAL);
-
-    if(BackVision.objectCount == 0)
-    {
-      Brain.Screen.setCursor(2, 2);
-      Brain.Screen.print("No objects");
-      return;
-    }
-
-    int goal = BackVision.objects[0].centerX;
-
-    double offset = targetX - goal;
-    double goalDistance = 59.0;
-
-    if(abs((int)offset) <= visionMarginOfError) aligned = true;
-    else
-    {
-      double turnAngle = atan(offset / goalDistance);
-      if(turnAngle < 0) turnAngle *= -1;
-
-      turnAngle *= 180;
-      turnAngle /= 3.1415926;
-
-      printVisionValues(offset, goalDistance, turnAngle);
-
-      if(offset < 0) alignTurnRight(turnAngle);
-      else alignTurnLeft(turnAngle);
-    }
+    skills();
+    return;
   }
 
-  visionDriveTo(vex::reverse);
+  //Drive to Goal
+  autoDrive(2000, 55);
+
+  //Pick up goal
+  FrontArms.spinFor(vex::reverse, 180, degrees);
+
+  //Drive back
+  autoDrive(2000, -70);
 }
 
-//Sensor Position: Right
-void alignFront()
-{
-  clearVisionPrintLines();
-  setAlignmentDriveVelocity();
-
-  bool aligned = false;
-
-  //Target: Slightly Right of the Center of the FOV
-  int targetX = visionFOV_X / 2 - 30;
-
-  while(!aligned)
-  {
-    wait(100, msec);
-
-    FrontVision.takeSnapshot(FrontVision__RED_GOAL);
-
-    if(FrontVision.objectCount == 0)
-    {
-      Brain.Screen.setCursor(2, 2);
-      Brain.Screen.print("No objects");
-      Brain.Screen.setCursor(3, 7);
-      Brain.Screen.print("Front");
-      return;
-    }
-
-    int goalCenter = FrontVision.objects[0].centerX;
-
-    double offset = targetX - goalCenter;
-    double goalDistance = 59.0;
-
-    if(abs((int)offset) <= visionMarginOfError) aligned = true;
-    else
-    {
-      double turnAngle = atan(offset / goalDistance);
-      if(turnAngle < 0) turnAngle *= -1;
-
-      turnAngle *= 180;
-      turnAngle /= 3.1415926;
-
-      printVisionValues(offset, goalDistance, turnAngle);
-
-      if(offset < 0) alignTurnRight(turnAngle);
-      else alignTurnLeft(turnAngle);
-    }
-  }
-
-  //visionDriveTo(vex::forward);
-  visionDriveToNew();
-}
-
-//Back Arms
-void moveBackArms(vex::directionType direction)
-{
-  BackArms.spin(direction);
-}
-
-void stopBackArms()
-{
-  BackArms.stop();
-}
-
-//Front Arms
-void moveFrontArms(vex::directionType direction)
-{
-  FrontArms.spin(direction);
-}
-
-void stopFrontArms()
-{
-  FrontArms.stop();
-}
-
-//Driving
-int velocityAt(int position)
-{
-  int absPos = std::abs(position);
-
-  return absPos < minimumDriveVelocity ? minimumDriveVelocity : absPos;
-}
-
-void powerLeft(int position)
-{
-  if(position >= -1 * deadzone && position <= deadzone) LeftMotor.stop();
-  else
-  {
-    vex::directionType direction = position < 0 ? vex::reverse : vex::forward;
-
-    LeftMotor.setVelocity(velocityAt(position), percent);
-    LeftMotor.spin(direction);
-  }
-}
-
-void powerRight(int position)
-{
-  if(position >= -1 * deadzone && position <= deadzone) RightMotor.stop();
-  else
-  {
-    vex::directionType direction = position < 0 ? vex::reverse : vex::forward;
-
-    RightMotor.setVelocity(std::abs(position), percent);
-    RightMotor.spin(direction);
-  }
-}
-
-bool checkMotorTemps()
-{
-  int tempLimit = 60;
-  vex::temperatureUnits c = vex::temperatureUnits::celsius;
-
-  bool exit = false;
-
-  //Check Drive Motors (These shouldn't overheat)
-  if(LeftMotor.temperature(c) > tempLimit || LeftMotor.temperature(c) > tempLimit)
-  {
-    Brain.Screen.setCursor(2, 2);
-    Brain.Screen.clearLine();
-    Brain.Screen.print("Drive Motor Overheated!");
-
-    Brain.Screen.setCursor(3, 3);
-    Brain.Screen.print(LeftMotor.temperature(c));
-    Brain.Screen.setCursor(3, 4);
-    Brain.Screen.print(RightMotor.temperature(c));
-
-    exit = true;
-  }
-
-  //Check Back Arm Motors (These shouldn't really overheat)
-  if(BackArms.temperature(c) > tempLimit)
-  {
-    Brain.Screen.setCursor(3, 2);
-    Brain.Screen.clearLine();
-    Brain.Screen.print("Back Arm Motors (Longer Arms) Overheated!");
-
-    Brain.Screen.setCursor(3, 3);
-    Brain.Screen.print(BackArms.temperature(c));
-
-    exit = true;
-  }
-
-  //Check Front Arm Motors (These will most likely overheat)
-  if(FrontArms.temperature(c) > tempLimit)
-  {
-    Brain.Screen.setCursor(4, 2);
-    Brain.Screen.clearLine();
-    Brain.Screen.print("Front Arm Motors (Shorter Arms) Overheated!");
-
-    Brain.Screen.setCursor(4, 3);
-    Brain.Screen.print(FrontArms.temperature(c));
-
-    exit = true;
-  }
-
-  return exit;
-}
-
-void driver()
+void driver(CarryArmDualMotors fArm, ElevatorArmMotor bArm, ElevatorArmMotor tArm)
 {
   leftDriveAxis().changed([](){ powerLeft(leftDriveAxis().position()); });
   rightDriveAxis().changed([](){ powerRight(rightDriveAxis().position()); });
 
-  frontArmsUp().pressed([](){ moveFrontArms(vex::forward); });
-  frontArmsDown().pressed([](){ moveFrontArms(vex::reverse); });
-
-  if(frontArmsUp().pressing()) moveFrontArms(vex::forward);
-  else if(frontArmsDown().pressing()) moveFrontArms(vex::reverse);
-  else stopFrontArms();
-
-  if(backArmsUp().pressing()) moveBackArms(vex::forward);
-  else if(backArmsDown().pressing()) moveBackArms(vex::reverse);
-  else stopBackArms();
-
-  alignFrontVision().pressed([](){ alignFront(); });
-  alignBackVision().pressed([](){ alignBack(); });
+  fArm.update(frontArmsUp().pressing(), frontArmsDown().pressing(), false);
+  bArm.update(backArmsUp().pressing(), backArmsDown().pressing(), false);
+  tArm.update(tiltArmsUp().pressing(), tiltArmsDown().pressing(), false);
+  
+  //alignVision().pressed([](){ CustomVisionSensor v(CarryVision, CarryVision__BLUE_GOAL, false); v.alignCarryArm(); });
+  //alignBackVision().pressed([](){ alignBack(); });
+  
+  // testing
+  if(autonButton().pressing()) {
+    auton(SKILLS);
+  }
 
   wait(100, msec);
 }
 
-void auton()
+void teleop()
 {
+  CarryArmDualMotors fArm(FrontArms, true, false);
+  ElevatorArmMotor bArm(CascadeArm, true, false);
+  ElevatorArmMotor tArm(TiltArm, true, false);
 
+  while(true) 
+  {
+    driver(fArm, bArm, tArm); 
+
+    wait(100, msec);
+  }
 }
 
 void panic()
 {
   LeftMotor.stop();
   RightMotor.stop();
+  FrontArms.stop();
+  CascadeArm.stop();
+  TiltArm.stop();
+}
+
+void calibrateInertial()
+{
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("Calibrating Intertial Sensor");
+
+  Inertial.calibrate();
+  wait(500, msec);
+
+  Brain.Screen.clearScreen();
+}
+
+void init()
+{
+  calibrateInertial();
+
+  FrontArms.setVelocity(70, percent);
+
+  CascadeArm.setVelocity(80, percent);
+  TiltArm.setVelocity(25, percent);
+
+  FrontArms.setMaxTorque(100, percent);
+
+  CascadeArm.setMaxTorque(50, percent);
+  TiltArm.setMaxTorque(80, percent);
+
+  FrontArms.setStopping(hold);
+  CascadeArm.setStopping(hold);
+  TiltArm.setStopping(hold);
+
+  panicButton().pressed(panic);
 }
 
 int main() 
@@ -391,33 +228,10 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  Brain.Screen.setCursor(1, 1);
-  Brain.Screen.print("Calibrating Intertial Sensor");
+  //Init
+  init();
 
-  Inertial.calibrate();
-  wait(2, seconds);
-  
-  Brain.Screen.clearScreen();
-
-  FrontArms.setVelocity(70, percent);
-  BackArms.setVelocity(80, percent);
-
-  FrontArms.setMaxTorque(100, percent);
-  BackArms.setMaxTorque(50, percent);
-
-  FrontArms.setStopping(hold);
-  BackArms.setStopping(hold);
-
-  panicButton().pressed(panic);
-
-  while(true) 
-  {
-    driver(); 
-
-    //alignFront();
-
-    wait(100, msec);
-
-    if(checkMotorTemps()) break;
-  }
+  //Competition Stuff
+  Competition.drivercontrol(teleop);
+  Competition.autonomous([](){ auton(SKILLS); });
 }

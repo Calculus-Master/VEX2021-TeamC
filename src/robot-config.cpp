@@ -14,19 +14,20 @@ motor RightMotor = motor(PORT1, ratio36_1, true);
 motor FrontArmsMotorA = motor(PORT3, ratio18_1, true);
 motor FrontArmsMotorB = motor(PORT4, ratio18_1, false);
 motor_group FrontArms = motor_group(FrontArmsMotorA, FrontArmsMotorB);
-motor BackArmsMotorA = motor(PORT5, ratio18_1, false);
-motor BackArmsMotorB = motor(PORT6, ratio18_1, true);
-motor_group BackArms = motor_group(BackArmsMotorA, BackArmsMotorB);
 /*vex-vision-config:begin*/
-signature BackVision__RED_GOAL = signature (1, 7085, 8705, 7895, -999, -465, -732, 3, 0);
-vision BackVision = vision (PORT20, 50, BackVision__RED_GOAL);
+signature ElevatorVision__RED_GOAL = signature (1, 7085, 8705, 7895, -999, -465, -732, 3, 0);
+vision ElevatorVision = vision (PORT20, 50, ElevatorVision__RED_GOAL);
 /*vex-vision-config:end*/
 inertial Inertial = inertial(PORT10);
 /*vex-vision-config:begin*/
-signature FrontVision__RED_GOAL = signature (1, 7451, 9457, 8454, -1065, -353, -710, 3, 0);
-vision FrontVision = vision (PORT19, 50, FrontVision__RED_GOAL);
+signature CarryVision__RED_GOAL = signature (1, 7451, 9457, 8454, -1065, -353, -710, 3, 0);
+signature CarryVision__MIDDLE_GOAL = signature (2, 1515, 2033, 1774, -3687, -3253, -3470, 3.3, 0);
+signature CarryVision__BLUE_GOAL = signature (3, -1873, -1451, -1662, 4615, 6707, 5661, 3.5, 0);
+vision CarryVision = vision (PORT19, 35, CarryVision__RED_GOAL, CarryVision__MIDDLE_GOAL, CarryVision__BLUE_GOAL);
 /*vex-vision-config:end*/
 distance Optical = distance(PORT16);
+motor CascadeArm = motor(PORT6, ratio18_1, false);
+motor TiltArm = motor(PORT5, ratio18_1, false);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable
