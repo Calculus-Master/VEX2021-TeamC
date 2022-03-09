@@ -6,9 +6,7 @@ using signature = vision::signature;
 
 // VEXcode devices
 extern controller Controller1;
-extern motor LeftMotor;
-extern motor RightMotor;
-extern motor_group FrontArms;
+extern motor_group HookArms;
 extern signature ElevatorVision__RED_GOAL;
 extern signature ElevatorVision__SIG_2;
 extern signature ElevatorVision__SIG_3;
@@ -29,6 +27,8 @@ extern vision CarryVision;
 extern distance Optical;
 extern motor CascadeArm;
 extern motor TiltArm;
+extern motor_group LeftMotor;
+extern motor_group RightMotor;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.

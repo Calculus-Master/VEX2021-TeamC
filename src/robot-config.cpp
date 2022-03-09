@@ -9,11 +9,9 @@ brain  Brain;
 
 // VEXcode device constructors
 controller Controller1 = controller(primary);
-motor LeftMotor = motor(PORT2, ratio36_1, false);
-motor RightMotor = motor(PORT1, ratio36_1, true);
-motor FrontArmsMotorA = motor(PORT3, ratio18_1, true);
-motor FrontArmsMotorB = motor(PORT4, ratio18_1, false);
-motor_group FrontArms = motor_group(FrontArmsMotorA, FrontArmsMotorB);
+motor HookArmsMotorA = motor(PORT3, ratio18_1, true);
+motor HookArmsMotorB = motor(PORT4, ratio18_1, false);
+motor_group HookArms = motor_group(HookArmsMotorA, HookArmsMotorB);
 /*vex-vision-config:begin*/
 signature ElevatorVision__RED_GOAL = signature (1, 7085, 8705, 7895, -999, -465, -732, 3, 0);
 vision ElevatorVision = vision (PORT20, 50, ElevatorVision__RED_GOAL);
@@ -28,6 +26,12 @@ vision CarryVision = vision (PORT19, 35, CarryVision__RED_GOAL, CarryVision__MID
 distance Optical = distance(PORT16);
 motor CascadeArm = motor(PORT6, ratio18_1, false);
 motor TiltArm = motor(PORT5, ratio18_1, false);
+motor LeftMotorMotorA = motor(PORT1, ratio18_1, false);
+motor LeftMotorMotorB = motor(PORT9, ratio18_1, false);
+motor_group LeftMotor = motor_group(LeftMotorMotorA, LeftMotorMotorB);
+motor RightMotorMotorA = motor(PORT2, ratio18_1, true);
+motor RightMotorMotorB = motor(PORT8, ratio18_1, true);
+motor_group RightMotor = motor_group(RightMotorMotorA, RightMotorMotorB);
 
 // VEXcode generated functions
 // define variable for remote controller enable/disable

@@ -11,15 +11,15 @@
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
 // Controller1          controller                    
-// LeftMotor            motor         2               
-// RightMotor           motor         1               
-// FrontArms            motor_group   3, 4            
-// BackVision           vision        20              
+// HookArms             motor_group   3, 4            
+// ElevatorVision       vision        20              
 // Inertial             inertial      10              
-// FrontVision          vision        19              
+// CarryVision          vision        19              
 // Optical              distance      16              
 // CascadeArm           motor         6               
 // TiltArm              motor         5               
+// LeftMotor            motor_group   1, 9            
+// RightMotor           motor_group   2, 8            
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
@@ -37,190 +37,187 @@ using namespace std;
 
 vex::competition Competition;
 
+//-------------------------Controls-------------------------------------
 controller::axis leftDriveAxis() { return Controller1.Axis3; }
 controller::axis rightDriveAxis() { return Controller1.Axis2; }
 
-controller::button frontArmsUp() { return Controller1.ButtonR1; }
-controller::button frontArmsDown() { return Controller1.ButtonL1; }
+controller::button hookArmsUp() { return Controller1.ButtonL1; }
+controller::button hookArmsDown() { return Controller1.ButtonL2; }
 
-controller::button backArmsUp() { return Controller1.ButtonR2; }
-controller::button backArmsDown() { return Controller1.ButtonL2; }
+controller::button cascadeArmUp() { return Controller1.ButtonR1; }
+controller::button cascadeArmDown() { return Controller1.ButtonR2; }
 
-controller::button tiltArmsDown() { return Controller1.ButtonDown; }
-controller::button tiltArmsUp() { return Controller1.ButtonUp; }
-
-controller::button alignVision() { return Controller1.ButtonY; }
+controller::button tiltArmsUp() { return Controller1.ButtonDown; }
+controller::button tiltArmsDown() { return Controller1.ButtonUp; }
 
 controller::button panicButton() { return Controller1.ButtonX; }
 
-controller::button autonButton() { return Controller1.ButtonB; }
-
-void turn(vex::turnType turn, int deg)
+//-------------------------Auton----------------------------------------
+void spinHookFor(int time, vex::directionType dir)
 {
-  LeftMotor.setVelocity(100, percent);
-  RightMotor.setVelocity(100, percent);
-
-  if (turn == right) {
-    LeftMotor.spinFor(vex::forward, deg, degrees);
-    RightMotor.spinFor(vex::reverse, deg, degrees);
-  }
-  else {
-    RightMotor.spinFor(vex::forward, deg, degrees);
-    LeftMotor.spinFor(vex::reverse, deg, degrees);
-  }
+  HookArms.spin(dir); wait(time, msec); HookArms.stop();
 }
 
-void powerFor(bool left, int velocity, int time)
+void spinTiltFor(int time, vex::directionType direction)
 {
-  if(left) powerLeft(velocity);
-  else powerRight(velocity);
+  TiltArm.spin(direction); wait(time, msec); TiltArm.stop();
+}
 
+void spinCascadeFor(int time, vex::directionType direction)
+{
+  CascadeArm.spin(direction); wait(time, msec); CascadeArm.stop();
+}
+
+void driveFor(int time, int velocity)
+{
+  powerLeft(velocity); powerRight(velocity);
   wait(time, msec);
-
-  if(left) LeftMotor.stop();
-  else RightMotor.stop();
+  LeftMotor.stop(); RightMotor.stop();
 }
 
-enum StartPos
+void powerFor(vex::turnType dir, int velocity, int time)
 {
-  BLUE_LEFT,
-  BLUE_RIGHT,
-  RED_LEFT,
-  RED_RIGHT,
+  if(dir == vex::left) powerLeft(velocity); else powerRight(velocity);
+  wait(time, msec);
+  if(dir == vex::left) LeftMotor.stop(); else RightMotor.stop();
+}
+
+void auton_Skills()
+{
+  spinCascadeFor(300, vex::reverse);
+
+  //Blue 1
+  driveFor(4000, -100);
+
+  //Turn: Yellow 1
+  driveFor(200, 100);
+  powerFor(vex::left, 100, 400);
+
+  //Yellow 1
+  driveFor(3600, 100);
+
+  //Turn: Yellow 2
+  driveFor(100, -100);
+  powerFor(vex::left, -100, 700);
+
+  //Yellow 2
+  driveFor(3400, -100);
+
+  //Turn: Yellow 3
+  driveFor(200, 100);
+  powerFor(vex::left, 100, 800);
+
+  //Yellow 3
+  driveFor(2500, 100);
+}
+
+void auton_AllianceGoal()
+{
+  //Ready Tilt Arm
+  spinTiltFor(300, vex::forward);
+
+  //Bring down Hook Arms
+  HookArms.spinFor(vex::forward, 320, degrees);
+
+  //Drive to Goal
+  driveFor(1300, 100);
+
+  //Pick up Hook Arms
+  spinHookFor(200, vex::reverse);
+
+  //Tilt Back
+  spinTiltFor(350, vex::reverse);
+
+  //Drive back
+  driveFor(1000, -100);
+}
+
+void auton_CenterGoal()
+{
+  //Ready Tilt Arm
+  spinTiltFor(300, vex::forward);
+
+  //Drive to Goal
+  driveFor(3200, -100);
+
+  //Tilt Back
+  spinTiltFor(350, vex::reverse);
+
+  //Drive back
+  driveFor(2800, 100);
+}
+
+enum AutonPos
+{
+  ALLIANCE_GOAL,
+  CENTER_GOAL,
   SKILLS
 };
 
-void autoDrive(int time, int velocity)
+void auton(AutonPos pos)
 {
-  powerLeft(velocity);
-  powerRight(velocity);
-
-  wait(time, msec);
-
-  LeftMotor.stop();
-  RightMotor.stop();
+  if(pos == SKILLS) auton_Skills(); else if(pos == ALLIANCE_GOAL) auton_AllianceGoal(); else if(pos == CENTER_GOAL) auton_CenterGoal();
 }
 
-void skills()
-{
-  //Drop Carry Arms
-  //FrontArms.spinFor(vex::forward, 200, degrees);
-
-  //Drop Elevator Arm
-  TiltArm.spinFor(vex::reverse, 100, degrees);
-
-  //Push Yellow 1
-  autoDrive(6000, 100);
-
-  //Turn Yellow 2
-  powerFor(false, -100, 1050);
-
-  //Push Yellow 2
-  autoDrive(5500, -100);
-
-  //Drive out a little
-  autoDrive(700, 100);
-
-  //Turn Yellow 3
-  powerFor(true, -100, 1600);
-  powerFor(false, 100, 200);
-
-  //Push Yellow 3
-  autoDrive(5000, 100);
-}
-
-void auton(StartPos pos)
-{
-  //Ditch old stuff because Hardcoding is the best
-  if(pos == SKILLS) 
-  {
-    skills();
-    return;
-  }
-
-  //Drive to Goal
-  autoDrive(2000, 55);
-
-  //Pick up goal
-  FrontArms.spinFor(vex::reverse, 180, degrees);
-
-  //Drive back
-  autoDrive(2000, -70);
-}
-
-void driver(CarryArmDualMotors fArm, ElevatorArmMotor bArm, ElevatorArmMotor tArm)
+//-------------------------Teleop---------------------------------------
+void driver(CarryArmDualMotors hook, ElevatorArmMotor cascade, ElevatorArmMotor tilt)
 {
   leftDriveAxis().changed([](){ powerLeft(leftDriveAxis().position()); });
   rightDriveAxis().changed([](){ powerRight(rightDriveAxis().position()); });
 
-  fArm.update(frontArmsUp().pressing(), frontArmsDown().pressing(), false);
-  bArm.update(backArmsUp().pressing(), backArmsDown().pressing(), false);
-  tArm.update(tiltArmsUp().pressing(), tiltArmsDown().pressing(), false);
-  
-  //alignVision().pressed([](){ CustomVisionSensor v(CarryVision, CarryVision__BLUE_GOAL, false); v.alignCarryArm(); });
-  //alignBackVision().pressed([](){ alignBack(); });
-  
-  // testing
-  if(autonButton().pressing()) {
-    auton(SKILLS);
-  }
+  hook.update(hookArmsUp().pressing(), hookArmsDown().pressing(), false);
+  cascade.update(cascadeArmUp().pressing(), cascadeArmDown().pressing(), false);
+  tilt.update(tiltArmsUp().pressing(), tiltArmsDown().pressing(), false);
 
   wait(100, msec);
 }
 
 void teleop()
 {
-  CarryArmDualMotors fArm(FrontArms, true, false);
-  ElevatorArmMotor bArm(CascadeArm, true, false);
-  ElevatorArmMotor tArm(TiltArm, true, false);
+  CarryArmDualMotors hook(HookArms, true, false);
+  ElevatorArmMotor cascade(CascadeArm, true, false);
+  ElevatorArmMotor tilt(TiltArm, true, false);
 
-  while(true) 
-  {
-    driver(fArm, bArm, tArm); 
-
-    wait(100, msec);
-  }
+  while(true) driver(hook, cascade, tilt);
 }
 
 void panic()
 {
   LeftMotor.stop();
   RightMotor.stop();
-  FrontArms.stop();
+  HookArms.stop();
   CascadeArm.stop();
   TiltArm.stop();
 }
 
-void calibrateInertial()
-{
-  Brain.Screen.setCursor(1, 1);
-  Brain.Screen.print("Calibrating Intertial Sensor");
-
-  Inertial.calibrate();
-  wait(500, msec);
-
-  Brain.Screen.clearScreen();
-}
-
 void init()
 {
-  calibrateInertial();
+  //Inertial
+  Controller1.Screen.print("Inertial Sensor Calibration Started!");
 
-  FrontArms.setVelocity(70, percent);
+  Inertial.calibrate();
+  waitUntil(!Inertial.isCalibrating());
 
-  CascadeArm.setVelocity(80, percent);
-  TiltArm.setVelocity(25, percent);
+  Controller1.Screen.clearScreen();
+  Controller1.Screen.print("Inertial Sensor Calibration Completed!");
 
-  FrontArms.setMaxTorque(100, percent);
+  //Other Stuff
+  HookArms.setVelocity(60, percent);
+  HookArms.setMaxTorque(100, percent);
 
+  CascadeArm.setVelocity(70, percent);
   CascadeArm.setMaxTorque(50, percent);
+
+  TiltArm.setVelocity(45, percent);
   TiltArm.setMaxTorque(80, percent);
 
-  FrontArms.setStopping(hold);
+  HookArms.setStopping(hold);
   CascadeArm.setStopping(hold);
   TiltArm.setStopping(hold);
 
   panicButton().pressed(panic);
+
+  Controller1.Screen.clearScreen();
 }
 
 int main() 
@@ -228,10 +225,12 @@ int main()
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  //Init
+  //Our Init
   init();
+
+  Controller1.ButtonA.pressed(auton_Skills);
 
   //Competition Stuff
   Competition.drivercontrol(teleop);
-  Competition.autonomous([](){ auton(SKILLS); });
+  Competition.autonomous([](){ auton(CENTER_GOAL); });
 }
